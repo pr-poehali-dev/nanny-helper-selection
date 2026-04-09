@@ -80,6 +80,12 @@ export default function Index() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
+  const [reviewIdx, setReviewIdx] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => setReviewIdx(i => (i + 1) % testimonials.length), 5000);
+    return () => clearInterval(t);
+  }, []);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -293,21 +299,59 @@ export default function Index() {
               <h2 className="font-display text-4xl sm:text-5xl font-semibold" style={{ color: "var(--brown-deep)" }}>Отзывы</h2>
             </div>
           </RevealSection>
-          <div className="grid sm:grid-cols-2 gap-6">
-            {testimonials.map((t, i) => (
-              <RevealSection key={i}>
-                <div className="testimonial-card card-hover rounded-2xl p-8" style={{ boxShadow: "0 4px 20px rgba(61,43,31,0.05)" }}>
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <div className="font-semibold" style={{ color: "var(--brown-deep)" }}>{t.name}</div>
-                      <div className="text-sm" style={{ color: "var(--brown-mid)" }}>{t.city} · {t.child}</div>
+          {/* Карусель отзывов */}
+          <div className="relative overflow-hidden">
+            <div
+              className="flex transition-transform duration-700 ease-in-out"
+              style={{ transform: `translateX(-${reviewIdx * 100}%)` }}
+            >
+              {testimonials.map((t, i) => (
+                <div key={i} className="w-full flex-shrink-0 px-2">
+                  <div className="testimonial-card rounded-2xl p-8 max-w-2xl mx-auto" style={{ boxShadow: "0 4px 20px rgba(61,43,31,0.07)" }}>
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="font-semibold text-lg" style={{ color: "var(--brown-deep)" }}>{t.name}</div>
+                        <div className="text-sm mt-0.5" style={{ color: "var(--brown-mid)" }}>{t.city} · {t.child}</div>
+                      </div>
+                      <StarRating rating={t.rating} size={18} />
                     </div>
-                    <StarRating rating={t.rating} />
+                    <p className="text-base leading-relaxed mb-4" style={{ color: "var(--brown-mid)" }}>"{t.text}"</p>
+                    <div className="text-xs" style={{ color: "rgba(122,92,71,0.5)" }}>{t.date}</div>
                   </div>
-                  <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--brown-mid)" }}>"{t.text}"</p>
-                  <div className="text-xs" style={{ color: "rgba(122,92,71,0.5)" }}>{t.date}</div>
                 </div>
-              </RevealSection>
+              ))}
+            </div>
+
+            {/* Стрелки */}
+            <button
+              onClick={() => setReviewIdx(i => (i - 1 + testimonials.length) % testimonials.length)}
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition-all"
+              style={{ backgroundColor: "white", boxShadow: "0 2px 12px rgba(61,43,31,0.12)" }}
+            >
+              <Icon name="ChevronLeft" size={20} style={{ color: "var(--terracotta)" }} />
+            </button>
+            <button
+              onClick={() => setReviewIdx(i => (i + 1) % testimonials.length)}
+              className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition-all"
+              style={{ backgroundColor: "white", boxShadow: "0 2px 12px rgba(61,43,31,0.12)" }}
+            >
+              <Icon name="ChevronRight" size={20} style={{ color: "var(--terracotta)" }} />
+            </button>
+          </div>
+
+          {/* Точки-индикаторы */}
+          <div className="flex justify-center gap-2 mt-6">
+            {testimonials.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setReviewIdx(i)}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: i === reviewIdx ? 24 : 8,
+                  height: 8,
+                  backgroundColor: i === reviewIdx ? "var(--terracotta)" : "rgba(196,99,74,0.25)",
+                }}
+              />
             ))}
           </div>
           <RevealSection>
