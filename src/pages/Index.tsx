@@ -78,6 +78,8 @@ export default function Index() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", city: "", service: "", comment: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -396,12 +398,40 @@ export default function Index() {
                     />
                   </div>
                 </div>
+                {formError && (
+                  <p className="mt-4 text-sm text-center font-medium" style={{ color: "#c44" }}>{formError}</p>
+                )}
                 <button
-                  onClick={() => setSubmitted(true)}
-                  className="w-full mt-6 btn-primary py-4 rounded-xl font-semibold text-base flex items-center justify-center gap-2"
+                  onClick={async () => {
+                    if (!form.name.trim() || !form.phone.trim()) {
+                      setFormError("Пожалуйста, заполните имя и телефон");
+                      return;
+                    }
+                    setFormError("");
+                    setLoading(true);
+                    try {
+                      const res = await fetch("https://functions.poehali.dev/4f0fb13f-129d-4c91-9561-3ac31c61bf82", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(form),
+                      });
+                      if (res.ok) {
+                        setSubmitted(true);
+                      } else {
+                        const data = await res.json();
+                        setFormError(data.error || "Ошибка при отправке. Попробуйте ещё раз.");
+                      }
+                    } catch {
+                      setFormError("Не удалось отправить заявку. Проверьте интернет-соединение.");
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full mt-6 btn-primary py-4 rounded-xl font-semibold text-base flex items-center justify-center gap-2 disabled:opacity-60"
                 >
-                  <Icon name="Send" size={18} />
-                  Получить подборку нянь
+                  {loading ? <Icon name="Loader" size={18} className="animate-spin" /> : <Icon name="Send" size={18} />}
+                  {loading ? "Отправляем..." : "Получить подборку нянь"}
                 </button>
                 <p className="text-center text-xs mt-4" style={{ color: "var(--brown-mid)" }}>
                   Мы перезвоним в течение 15 минут. Данные не передаём третьим лицам.
